@@ -49,7 +49,7 @@ app.post("/ufo", (req, res) => {
           }
         });
 
-      res.status(200).type("text/plain").send(extractedContent.join(" "));
+      res.status(200).set("Content-Type", "text/plain").send(extractedContent.join(" "));
     } catch {
       res.status(400).send("Invalid XML");
     }
