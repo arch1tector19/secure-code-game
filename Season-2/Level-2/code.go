@@ -18,11 +18,6 @@ import (
 	"regexp"
 )
 
-var reqBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func isValidEmail(email string) bool {
 	// The provided regular expression pattern for email validation by OWASP
 	// https://owasp.org/www-community/OWASP_Validation_Regex_Repository
@@ -45,7 +40,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-
+		var reqBody struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
 		decode := json.NewDecoder(r.Body)
 		decode.DisallowUnknownFields()
 
@@ -58,23 +56,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		password := reqBody.Password
 
 		if !isValidEmail(email) {
-			log.Printf("Invalid email format: %q", email)
+			log.Print("Invalid email format")
 			http.Error(w, "Invalid email format", http.StatusBadRequest)
 			return
 		}
 
 		storedPassword, ok := testFakeMockUsers[email]
-		if !ok {
-			http.Error(w, "invalid email or password", http.StatusUnauthorized)
+		if !ok || password != storedPassword {
+			http.Error(w, "Invalid Email or Password", http.StatusUnauthorized)
 			return
 		}
 
-		if password == storedPassword {
-			log.Printf("User %q logged in successfully with a valid password %q", email, password)
-			w.WriteHeader(http.StatusOK)
-		} else {
-			http.Error(w, "Invalid Email or Password", http.StatusUnauthorized)
-		}
+		log.Print("Successful login request")
+		w.WriteHeader(http.StatusOK)
 
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
